@@ -1,0 +1,5 @@
+outs:
+- md5: b24a4eda20db9e63917bdfb67643c583
+  size: 319923425
+  hash: md5
+  path: raw_klines.csv
