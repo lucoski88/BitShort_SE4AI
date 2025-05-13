@@ -15,7 +15,7 @@ public class DataPreprocessor {
             System.exit(1);
         }
         PrintWriter writer = new PrintWriter(args[1]);
-        // print header
+        // Print header
         writer.println(getHeader());
         KLine curr = KLine.parse(scanner.nextLine());
         while (scanner.hasNextLine()) {
