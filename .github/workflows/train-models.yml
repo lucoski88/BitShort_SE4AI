@@ -29,8 +29,8 @@ jobs:
           java-version: '8'
           distribution: 'temurin'
           cache: maven
-      - name: Maven Build Model Module
-        run: mvn clean install -pl model -am
+      - name: Maven Build ai-utils Module
+        run: mvn clean install -pl ai-utils -am
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -69,8 +69,8 @@ jobs:
           java-version: '8'
           distribution: 'temurin'
           cache: maven
-      - name: Maven Build Model Module
-        run: mvn clean install -pl model -am
+      - name: Maven Build ai-utils Module
+        run: mvn clean install -pl ai-utils -am
 
       - uses: actions/download-artifact@v4
         with:
