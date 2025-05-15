@@ -1,6 +1,7 @@
 package binance.types;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 public class KLine {
   private final long timestamp;
@@ -80,6 +81,22 @@ public class KLine {
 
   public double getTakerBuyQuoteAssetVolume() {
     return takerBuyQuoteAssetVolume;
+  }
+
+  public JSONObject toJSON() {
+    JSONObject json = new JSONObject();
+    json.put("timestamp", timestamp);
+    json.put("open", open);
+    json.put("high", high);
+    json.put("low", low);
+    json.put("close", close);
+    json.put("volume", volume);
+    json.put("closeTimestamp", closeTimestamp);
+    json.put("quoteAssetVolume", quoteAssetVolume);
+    json.put("numberOfTrades", numberOfTrades);
+    json.put("takerBuyBaseAssetVolume", takerBuyBaseAssetVolume);
+    json.put("takerBuyQuoteAssetVolume", takerBuyQuoteAssetVolume);
+    return json;
   }
 
   @Override

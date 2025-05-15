@@ -2,6 +2,7 @@ package bot;
 
 import binance.BinanceUtil;
 import binance.types.KLine;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.net.HttpURLConnection;
@@ -84,18 +85,12 @@ public class DataProducer extends Thread {
                 }
             }
             List<KLine> obtainedData = dataObtainer.getData();
-            KLine prevMin5 = obtainedData.get(0);
-            KLine prevMin4 = obtainedData.get(1);
-            KLine prevMin3 = obtainedData.get(2);
-            KLine prevMin2 = obtainedData.get(3);
-            KLine prevMin1 = obtainedData.get(4);
-            KLine actualMin = obtainedData.get(5);
-            
-            String request = "close5=" + prevMin5.getClose() +
-                    "&" + "close4=" + prevMin4.getClose() +
-                    "&" + "close3=" + prevMin3.getClose() +
-                    "&" + "close2=" + prevMin2.getClose() +
-                    "&" + "close1=" + prevMin1.getClose();
+            JSONObject jsonMain = new JSONObject();
+            JSONArray jsonData = new JSONArray();
+            for (KLine k : obtainedData) {
+                jsonData.put(k.toJSON());
+            }
+            jsonMain.put("data", jsonData);
             URL url = null;
             HttpURLConnection conn = null;
                     try{
@@ -104,7 +99,7 @@ public class DataProducer extends Thread {
                         conn.setRequestMethod("POST");
                         conn.setDoOutput(true);
                         conn.setDoInput(true);
-                        conn.getOutputStream().write(request.getBytes(StandardCharsets.UTF_8));
+                        conn.getOutputStream().write(jsonMain.toString().getBytes(StandardCharsets.UTF_8));
                         JSONObject json = new JSONObject(new String(conn.getInputStream().readAllBytes(), StandardCharsets.UTF_8));
                         modelProcessedData = json.getDouble("prediction");
                     } catch (Exception e) {
