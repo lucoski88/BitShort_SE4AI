@@ -16,9 +16,13 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.Metadata;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -47,8 +51,8 @@ public class HttpHandlerImplML implements HttpHandler {
                 break;
         }
     }
-    
-    private void doPost(HttpExchange httpExchange) throws IOException {
+
+    /*private void doPost(HttpExchange httpExchange) throws IOException {
         System.out.println("Doing post");
         String parameters = new String(new Scanner(httpExchange.getRequestBody()).nextLine()
                 .getBytes(StandardCharsets.UTF_8));
@@ -59,9 +63,9 @@ public class HttpHandlerImplML implements HttpHandler {
             if(parametersMap.containsKey("close5") && parametersMap.containsKey("close4") &&
                 parametersMap.containsKey("close3") && parametersMap.containsKey("close2") &&
                     parametersMap.containsKey("close1")) {
-                /*double[] params = new double[]{(double) parametersMap.get("open"),
-                    (double) parametersMap.get("low"),
-                    (double) parametersMap.get("actualOpen")};*/
+                //double[] params = new double[]{(double) parametersMap.get("open"),
+                    //(double) parametersMap.get("low"),
+                    //(double) parametersMap.get("actualOpen")};
                 double[] params = new double[]{
                         (double) parametersMap.get("close5"),
                         (double) parametersMap.get("close4"),
@@ -97,7 +101,61 @@ public class HttpHandlerImplML implements HttpHandler {
                 return;
             }
         }
-        
+
         httpExchange.sendResponseHeaders(400, -1);
+    }*/
+
+    private void doPost(HttpExchange httpExchange) throws IOException {
+        InputStream requestBodyStream = httpExchange.getRequestBody();
+        ByteArrayOutputStream buff = new ByteArrayOutputStream();
+        byte[] tmpBuff = new byte[8192];
+        int length = 0;
+        while ((length = requestBodyStream.read(tmpBuff)) > 0) {
+            buff.write(tmpBuff, 0, length);
+        }
+        String jsonString = new String(buff.toByteArray(), StandardCharsets.UTF_8);
+        try {
+            JSONObject requestBodyJson = new JSONObject(jsonString);
+            JSONArray dataJson = requestBodyJson.getJSONArray("data");
+            JSONObject klineJson = dataJson.getJSONObject(0);
+
+            double open = klineJson.getDouble("open");
+            double high = klineJson.getDouble("high");
+            double low = klineJson.getDouble("low");
+            double close = klineJson.getDouble("close");
+            double[] params = new double[]{
+                    open,
+                    high,
+                    low,
+                    close
+            };
+            SparkSession spark = SparkSession
+                    .builder()
+                    .appName("ModelCreator")
+                    .master("local")
+                    .getOrCreate();
+            DenseVector vector = new DenseVector(params);
+            StructType schema = new StructType(new StructField[]{
+                    new StructField("features", new VectorUDT(), false, Metadata.empty())
+            });
+            Row row = RowFactory.create((Vector) vector);
+            Dataset<Row> inputDF = spark.createDataFrame(Collections.singletonList(row), schema);
+            Dataset<Row> scaledDF = scalerModel.transform(inputDF);
+            Vector scaledVector = scaledDF.select("scaledFeatures").first().getAs(0);
+            double prediction = model.predict(scaledVector);
+            double truncatedPrediction = BigDecimal.valueOf(prediction)
+                    .setScale(2, RoundingMode.DOWN).doubleValue();
+            System.out.println(prediction);
+            JSONObject json = new JSONObject();
+            json.put("prediction", truncatedPrediction);
+            httpExchange.sendResponseHeaders(200, json.toString().length());
+            httpExchange.getResponseHeaders().set("Content-Type", "application/json");
+            OutputStream out = httpExchange.getResponseBody();
+            out.write(json.toString().getBytes());
+            out.flush();
+            out.close();
+        } catch (JSONException jsonException) {
+            httpExchange.sendResponseHeaders(400, -1);
+        }
     }
 }
