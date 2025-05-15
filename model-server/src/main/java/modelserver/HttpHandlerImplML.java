@@ -118,7 +118,7 @@ public class HttpHandlerImplML implements HttpHandler {
             JSONObject requestBodyJson = new JSONObject(jsonString);
             JSONArray dataJson = requestBodyJson.getJSONArray("data");
             JSONObject klineJson = dataJson.getJSONObject(0);
-
+            System.out.println(klineJson);
             double open = klineJson.getDouble("open");
             double high = klineJson.getDouble("high");
             double low = klineJson.getDouble("low");

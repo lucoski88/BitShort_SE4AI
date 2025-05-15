@@ -60,6 +60,7 @@ public class RandomForestRegressorTrainer {
                 .setMax(1.0);
 
         RandomForestRegressor regression = new RandomForestRegressor();
+        regression.setFeaturesCol("scaledFeatures");
         Pipeline pipeline = new Pipeline()
                 .setStages(new PipelineStage[]{featuresAssembler, featuresScaler, regression});
 
@@ -95,8 +96,8 @@ public class RandomForestRegressorTrainer {
                 .setEstimator(pipeline)
                 .setEvaluator(maeEvaluator)
                 .setEstimatorParamMaps(paramGrid)
-                .setNumFolds(5)
-                .setParallelism(2);
+                .setNumFolds(3)
+                .setParallelism(Runtime.getRuntime().availableProcessors());
 
         System.out.println("Fitting CrossValidator...");
         CrossValidatorModel cvModel = crossValidator.fit(trainingSet);

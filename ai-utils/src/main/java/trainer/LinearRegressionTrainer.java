@@ -5,6 +5,7 @@ import org.apache.spark.ml.PipelineModel;
 import org.apache.spark.ml.PipelineStage;
 import org.apache.spark.ml.evaluation.RegressionEvaluator;
 import org.apache.spark.ml.feature.MinMaxScaler;
+import org.apache.spark.ml.feature.MinMaxScalerModel;
 import org.apache.spark.ml.feature.VectorAssembler;
 import org.apache.spark.ml.param.ParamMap;
 import org.apache.spark.ml.regression.LinearRegression;
@@ -60,6 +61,7 @@ public class LinearRegressionTrainer {
                 .setMin(0.0)
                 .setMax(1.0);
         LinearRegression regression = new LinearRegression();
+        regression.setFeaturesCol("scaledFeatures");
         Pipeline pipeline = new Pipeline()
                 .setStages(new PipelineStage[]{featuresAssembler, featuresScaler, regression});
 
@@ -91,8 +93,8 @@ public class LinearRegressionTrainer {
                 .setEstimator(pipeline)
                 .setEvaluator(maeEvaluator)
                 .setEstimatorParamMaps(paramGrid)
-                .setNumFolds(5)
-                .setParallelism(2);
+                .setNumFolds(3)
+                .setParallelism(Runtime.getRuntime().availableProcessors());
         System.out.println("Fitting CrossValidator...");
         CrossValidatorModel cvModel = crossValidator.fit(trainingSet);
         System.out.println("CrossValidator fit completed");
@@ -110,10 +112,13 @@ public class LinearRegressionTrainer {
         System.out.println("\tR2: " + r2 + ", is larger better: " + r2Evaluator.isLargerBetter());
         System.out.println("Model Coefficients:");
         LinearRegressionModel model = null;
+        MinMaxScalerModel scalerModel = null;
         for (PipelineStage s : ((PipelineModel) cvModel.bestModel()).stages())  {
             if (s instanceof LinearRegressionModel) {
                 model = (LinearRegressionModel) s;
-                break;
+            }
+            if (s instanceof MinMaxScalerModel) {
+                scalerModel = (MinMaxScalerModel) s;
             }
         }
         System.out.println("\t" + model.coefficients());
@@ -124,10 +129,11 @@ public class LinearRegressionTrainer {
         System.out.println("\tEpsilon: " + model.getEpsilon());
         System.out.println("\tLoss: " + model.getLoss());
         System.out.println("\tFitIntercept: " + model.getFitIntercept());
+
+        model.save("C:/Users/lucad/Desktop/models/model");
+        scalerModel.save("C:/Users/lucad/Desktop/models/scaler");
+
         session.stop();
         System.exit(0);
-
-        //model.save("C:/Users/lucad/Desktop/models/model");
-        //scalerModel.save("C:/Users/lucad/Desktop/models/scaler");
     }
 }
