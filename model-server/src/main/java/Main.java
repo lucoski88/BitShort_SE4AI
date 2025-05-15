@@ -3,11 +3,14 @@ import modelserver.HttpHandlerImplML;
 import org.apache.spark.ml.feature.MinMaxScalerModel;
 import org.apache.spark.ml.regression.LinearRegressionModel;
 import org.apache.spark.sql.SparkSession;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Main {
     public static void main(String[] args) throws Exception {
@@ -32,6 +35,7 @@ public class Main {
                 .appName("ModelServer")
                 .master("local")
                 .getOrCreate();
+
         MinMaxScalerModel scalerModel = MinMaxScalerModel.load(scalerModelPath);
         LinearRegressionModel model = LinearRegressionModel.load(modelPath);
         

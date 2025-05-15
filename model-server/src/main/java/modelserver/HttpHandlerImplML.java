@@ -2,12 +2,10 @@ package modelserver;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import org.apache.spark.ml.feature.MinMaxScaler;
 import org.apache.spark.ml.feature.MinMaxScalerModel;
 import org.apache.spark.ml.linalg.DenseVector;
 import org.apache.spark.ml.linalg.Vector;
 import org.apache.spark.ml.linalg.VectorUDT;
-import org.apache.spark.ml.linalg.Vectors;
 import org.apache.spark.ml.regression.LinearRegressionModel;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -19,6 +17,9 @@ import org.apache.spark.sql.types.StructType;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -27,9 +28,11 @@ import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Collections;
 
 public class HttpHandlerImplML implements HttpHandler {
+    private static final Logger logger = LoggerFactory.getLogger(HttpHandlerImplML.class);
+
     private LinearRegressionModel model;
     private MinMaxScalerModel scalerModel;
     
@@ -154,6 +157,13 @@ public class HttpHandlerImplML implements HttpHandler {
             out.write(json.toString().getBytes());
             out.flush();
             out.close();
+            MDC.put("open", Double.toString(open));
+            MDC.put("high", Double.toString(high));
+            MDC.put("low", Double.toString(low));
+            MDC.put("close", Double.toString(close));
+            MDC.put("prediction", Double.toString(truncatedPrediction));
+            HttpHandlerImplML.logger.info("Opla");
+            MDC.clear();
         } catch (JSONException jsonException) {
             httpExchange.sendResponseHeaders(400, -1);
         }
