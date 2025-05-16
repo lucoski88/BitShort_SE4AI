@@ -2,7 +2,7 @@
     <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
         <target>System.err</target>
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} | %msg | open=%X{open} | high=%X{high} | low%X{low} | close=%X{close} | prediction=%X{prediction}%n</pattern>
+            <pattern>%d{HH:mm:ss.SSS} | %level | %msg | open=%X{open} | high=%X{high} | low=%X{low} | close=%X{close} | prediction=%X{prediction}%n</pattern>
         </encoder>
     </appender>
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">

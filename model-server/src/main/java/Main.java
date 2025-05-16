@@ -3,17 +3,19 @@ import modelserver.HttpHandlerImplML;
 import org.apache.spark.ml.feature.MinMaxScalerModel;
 import org.apache.spark.ml.regression.LinearRegressionModel;
 import org.apache.spark.sql.SparkSession;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Main {
-    public static void main(String[] args) throws Exception {
+    private static final int port = 6666;
+    public static void main(String[] args) {
         if (args.length != 2) {
             System.err.println("Missing arguments");
             System.exit(1);
@@ -38,13 +40,17 @@ public class Main {
 
         MinMaxScalerModel scalerModel = MinMaxScalerModel.load(scalerModelPath);
         LinearRegressionModel model = LinearRegressionModel.load(modelPath);
-        
-        InetSocketAddress addr = new InetSocketAddress(6666);
-        HttpServer server = HttpServer.create(addr, 128);
-        server.createContext("/ml", new HttpHandlerImplML(model, scalerModel));
-        ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
-        server.setExecutor(threadPoolExecutor);
-        server.start();
-        System.out.println("Model server listening on port 6666");
+
+        try {
+            InetSocketAddress addr = new InetSocketAddress(port);
+            HttpServer server = HttpServer.create(addr, 128);
+            server.createContext("/ml", new HttpHandlerImplML(model, scalerModel));
+            ThreadPoolExecutor threadPoolExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(10);
+            server.setExecutor(threadPoolExecutor);
+            server.start();
+            System.out.println("Model server listening on port " + port);
+        } catch (IOException ioException) {
+            System.err.println("Couldn't start server");
+        }
     }
 }
