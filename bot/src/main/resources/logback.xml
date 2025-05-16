@@ -2,7 +2,7 @@
     <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
         <target>System.err</target>
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} | %msg | sentAt=%X{sent timestamp} | receivedAt=%X{received timestamp} | prediction=%X{prediction} | actual=%X{actual}%n</pattern>
+            <pattern>%d{HH:mm:ss.SSS} | %msg | sentAt=%X{sent timestamp} | receivedAt=%X{received timestamp} | prediction=%X{prediction} | actual=%X{actual} | error=%X{error}%n</pattern>
         </encoder>
     </appender>
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">

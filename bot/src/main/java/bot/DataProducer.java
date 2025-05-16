@@ -95,6 +95,7 @@ public class DataProducer extends Thread {
                 MDC.put("received timestamp", Long.toUnsignedString(prevLogs.receivedTime));
                 MDC.put("prediction", Double.toString(prevLogs.prediction));
                 MDC.put("actual", Double.toString(dataObtainer.getData().getFirst().getClose()));
+                MDC.put("error", Double.toString(dataObtainer.getData().getFirst().getClose() - prevLogs.prediction));
                 logger.info("Previous prediction");
                 MDC.clear();
             }
@@ -118,6 +119,7 @@ public class DataProducer extends Thread {
                 prevLogs = new Logs(sentTimestamp, receivedTimestamp, modelProcessedData);
             } catch (Exception e) {
                 System.out.println("[DATA PRODUCER] Couldn't connect to model server");
+                prevLogs = null;
                 continue;
             }
             System.out.println("[DATA PRODUCER] Data produced");
