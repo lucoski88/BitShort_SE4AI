@@ -43,7 +43,7 @@ public class HttpHandlerImplML implements HttpHandler {
     
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
-        System.out.println("Handling");
+        //System.out.println("Handling");
         String method = httpExchange.getRequestMethod();
         switch (method) {
             case "POST":
@@ -121,7 +121,7 @@ public class HttpHandlerImplML implements HttpHandler {
             JSONObject requestBodyJson = new JSONObject(jsonString);
             JSONArray dataJson = requestBodyJson.getJSONArray("data");
             JSONObject klineJson = dataJson.getJSONObject(0);
-            System.out.println(klineJson);
+            //System.out.println(klineJson);
             double open = klineJson.getDouble("open");
             double high = klineJson.getDouble("high");
             double low = klineJson.getDouble("low");
@@ -148,7 +148,7 @@ public class HttpHandlerImplML implements HttpHandler {
             double prediction = model.predict(scaledVector);
             double truncatedPrediction = BigDecimal.valueOf(prediction)
                     .setScale(2, RoundingMode.DOWN).doubleValue();
-            System.out.println(prediction);
+            //System.out.println(prediction);
             JSONObject json = new JSONObject();
             json.put("prediction", truncatedPrediction);
             httpExchange.sendResponseHeaders(200, json.toString().length());
@@ -162,7 +162,7 @@ public class HttpHandlerImplML implements HttpHandler {
             MDC.put("low", Double.toString(low));
             MDC.put("close", Double.toString(close));
             MDC.put("prediction", Double.toString(truncatedPrediction));
-            HttpHandlerImplML.logger.info("Opla");
+            HttpHandlerImplML.logger.info("Prediction computed");
             MDC.clear();
         } catch (JSONException jsonException) {
             httpExchange.sendResponseHeaders(400, -1);

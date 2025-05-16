@@ -4,6 +4,9 @@ import binance.BinanceUtil;
 import binance.types.KLine;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -13,6 +16,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DataProducer extends Thread {
+    private static final Logger logger = LoggerFactory.getLogger(DataProducer.class);
+    private static Logs prevLogs = null;
     private static final Map<String, DataProducer> instancesMapMain = new ConcurrentHashMap<>();
     private static final Map<String, DataProducer> instancesMapTest = new ConcurrentHashMap<>();
     private final DataObtainer dataObtainer;
@@ -85,31 +90,52 @@ public class DataProducer extends Thread {
                 }
             }
             List<KLine> obtainedData = dataObtainer.getData();
+            if (prevLogs != null) {
+                MDC.put("sent timestamp", Long.toUnsignedString(prevLogs.sentTime));
+                MDC.put("received timestamp", Long.toUnsignedString(prevLogs.receivedTime));
+                MDC.put("prediction", Double.toString(prevLogs.prediction));
+                MDC.put("actual", Double.toString(dataObtainer.getData().getFirst().getClose()));
+                logger.info("Previous prediction");
+                MDC.clear();
+            }
             JSONObject jsonMain = new JSONObject();
             JSONArray jsonData = new JSONArray();
-            for (KLine k : obtainedData) {
-                jsonData.put(k.toJSON());
-            }
+            jsonData.put(obtainedData.get(1).toJSON());
             jsonMain.put("data", jsonData);
             URL url = null;
             HttpURLConnection conn = null;
-                    try{
-                        url = new URL("http://localhost:6666/ml");
-                        conn = (HttpURLConnection) url.openConnection();
-                        conn.setRequestMethod("POST");
-                        conn.setDoOutput(true);
-                        conn.setDoInput(true);
-                        conn.getOutputStream().write(jsonMain.toString().getBytes(StandardCharsets.UTF_8));
-                        JSONObject json = new JSONObject(new String(conn.getInputStream().readAllBytes(), StandardCharsets.UTF_8));
-                        modelProcessedData = json.getDouble("prediction");
-                    } catch (Exception e) {
-                        System.out.println("[DATA PRODUCER] Couldn't connect to model server");
-                        continue;
-                    }
+            try{
+                url = new URL("http://localhost:6666/ml");
+                conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setDoOutput(true);
+                conn.setDoInput(true);
+                conn.getOutputStream().write(jsonMain.toString().getBytes(StandardCharsets.UTF_8));
+                long sentTimestamp = System.currentTimeMillis();
+                JSONObject json = new JSONObject(new String(conn.getInputStream().readAllBytes(), StandardCharsets.UTF_8));
+                long receivedTimestamp = System.currentTimeMillis();
+                modelProcessedData = json.getDouble("prediction");
+                prevLogs = new Logs(sentTimestamp, receivedTimestamp, modelProcessedData);
+            } catch (Exception e) {
+                System.out.println("[DATA PRODUCER] Couldn't connect to model server");
+                continue;
+            }
             System.out.println("[DATA PRODUCER] Data produced");
             synchronized (this) {
                 this.notifyAll();
             }
+        }
+    }
+
+    private static class Logs {
+        public long sentTime;
+        public long receivedTime;
+        public double prediction;
+
+        public Logs(long sentTime, long receivedTime, double prediction) {
+            this.sentTime = sentTime;
+            this.receivedTime = receivedTime;
+            this.prediction = prediction;
         }
     }
 }

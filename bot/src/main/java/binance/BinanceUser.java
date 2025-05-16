@@ -7,6 +7,7 @@ import com.binance.connector.client.impl.spot.Trade;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

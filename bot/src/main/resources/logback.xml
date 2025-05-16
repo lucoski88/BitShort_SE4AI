@@ -2,11 +2,11 @@
     <appender name="STDERR" class="ch.qos.logback.core.ConsoleAppender">
         <target>System.err</target>
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} | %msg | open=%X{open} | high=%X{high} | low%X{low} | close=%X{close} | prediction=%X{prediction}%n</pattern>
+            <pattern>%d{HH:mm:ss.SSS} | %msg | sentAt=%X{sent timestamp} | receivedAt=%X{received timestamp} | prediction=%X{prediction} | actual=%X{actual}%n</pattern>
         </encoder>
     </appender>
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-        <file>model-server.log</file>
+        <file>bot.log</file>
         <immediateFlush>true</immediateFlush>
         <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
             <providers>
@@ -18,7 +18,7 @@
         </encoder>
     </appender>
     <!-- Logger for your class only -->
-    <logger name="modelserver.HttpHandlerImplML" level="INFO" additivity="false">
+    <logger name="bot.DataProducer" level="INFO" additivity="false">
         <appender-ref ref="FILE" />
         <appender-ref ref="STDERR"/>
     </logger>
