@@ -95,7 +95,7 @@ public class DataProducer extends Thread {
                 MDC.put("received timestamp", Long.toUnsignedString(prevLogs.receivedTime));
                 MDC.put("prediction", Double.toString(prevLogs.prediction));
                 MDC.put("actual", Double.toString(dataObtainer.getData().getFirst().getClose()));
-                MDC.put("error", Double.toString(dataObtainer.getData().getFirst().getClose() - prevLogs.prediction));
+                MDC.put("error", Double.toString(prevLogs.prediction - dataObtainer.getData().getFirst().getClose()));
                 logger.info("Previous prediction");
                 MDC.clear();
             }
